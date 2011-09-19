@@ -15,6 +15,7 @@ describe Instantiator  do
       subject.object.should be == subject.object
     end
   end
+
   context 'with two clients for the same service' do
     before do
       class Client
@@ -29,6 +30,28 @@ describe Instantiator  do
     
     it 'it instantiates service once' do
       subject.client1[0].should be == subject.client1[0]
+    end
+  end
+
+  context 'when two wirings have the sane name they are independent' do
+    before do
+      class Client1
+        extend Instantiator
+        instance(:value) {1}
+      end
+
+      class Client2
+        extend Instantiator
+        instance(:value) {2}
+      end
+    end
+    
+    subject {Client1.new}
+    
+    it 'it instantiates service once' do
+      subject2 = Client2.new
+      subject.value.should == 1
+      subject2.value.should == 2
     end
   end
 end
