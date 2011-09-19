@@ -3,13 +3,13 @@ require 'instantiator'
 describe Instantiator  do
   context 'with a simple client' do
     before do
-      class Client
+      class ClientSimple
         extend Instantiator
         instance(:object) {rand}
       end
     end
     
-    subject {Client.new}
+    subject {ClientSimple.new}
     
     it 'it instantiates object once' do
       subject.object.should be == subject.object
@@ -18,7 +18,7 @@ describe Instantiator  do
 
   context 'with two clients for the same service' do
     before do
-      class Client
+      class ClientDouble
         extend Instantiator
         instance(:service) {rand}
         instance(:client1) {[service]}
@@ -26,14 +26,14 @@ describe Instantiator  do
       end
     end
     
-    subject {Client.new}
+    subject {ClientDouble.new}
     
     it 'it instantiates service once' do
       subject.client1[0].should be == subject.client1[0]
     end
   end
 
-  context 'when two wirings have the sane name they are independent' do
+  context 'when two wirings have the sane name' do
     before do
       class Client1
         extend Instantiator
@@ -46,12 +46,10 @@ describe Instantiator  do
       end
     end
     
-    subject {Client1.new}
+    subject {[Client1.new, Client2.new]}
     
-    it 'it instantiates service once' do
-      subject2 = Client2.new
-      subject.value.should == 1
-      subject2.value.should == 2
+    it 'they are independent' do
+      [subject[0].value, subject[1].value].should == [1, 2]
     end
   end
 end
