@@ -2,9 +2,11 @@ require 'instantiator'
 
 describe Instantiator  do
   context 'with a simple client' do
-    class Client
-      extend Instantiator
-      instance(:object) {rand}
+    before do
+      class Client
+        extend Instantiator
+        instance(:object) {rand}
+      end
     end
     
     subject {Client.new}
@@ -14,11 +16,13 @@ describe Instantiator  do
     end
   end
   context 'with two clients for the same service' do
-    class Client
-      extend Instantiator
-      instance(:service) {rand}
-      instance(:client1) {[rand]}
-      instance(:client2) {[rand]}
+    before do
+      class Client
+        extend Instantiator
+        instance(:service) {rand}
+        instance(:client1) {[service]}
+        instance(:client2) {[service]}
+      end
     end
     
     subject {Client.new}
