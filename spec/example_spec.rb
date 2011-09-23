@@ -1,4 +1,5 @@
 require 'instantiator'
+require 'ostruct'
 
 describe Instantiator  do
   context 'with a simple client' do
@@ -33,23 +34,24 @@ describe Instantiator  do
     end
   end
 
-  context 'when two wirings have the sane name' do
+  context 'when there is a circular dependency' do
     before do
-      class Client1
+      class ClientLoop
         extend Instantiator
-        instance(:value) {1}
-      end
-
-      class Client2
-        extend Instantiator
-        instance(:value) {2}
+        instance(:valueA) {OpenStruct.new(:b => valueB)}
+        instance(:valueB) {OpenStruct.new(:a => valueA)}
       end
     end
     
-    subject {[Client1.new, Client2.new]}
+    subject {ClientLoop.new}
     
-    it 'they are independent' do
-      [subject[0].value, subject[1].value].should == [1, 2]
+    it 'the first object has a normal reference to the second' do
+      subject.valueA.b.should == subject.valueB
+    end
+    
+    it 'the second object has a lazyProxy to the first' do
+      subject.valueA
+      subject.valueB.a.should_not == subject.valueA
     end
   end
 end
