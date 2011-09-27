@@ -54,6 +54,34 @@ describe Instantiator  do
       subject.valueB.a.should_not == subject.valueA
     end
   end
+
+  context 'where there is an externa' do
+    before do
+      class ExternalClient
+        extend Instantiator
+        
+        external(:thing)
+      end
+    end
+
+    subject {ExternalClient.new}
+
+    context 'and it is not defined' do
+      it 'thing is nil' do
+        subject.thing.should be_nil
+      end
+    end
+
+    context 'and it is defined' do
+      before do
+        subject.thing = 2
+      end
+      it 'thing is as assigned' do
+        subject.thing.should be == 2
+      end
+    end
+
+  end
 end
 
 
