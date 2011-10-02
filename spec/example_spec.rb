@@ -4,13 +4,13 @@ require 'ostruct'
 describe Instantiator  do
   context 'with a simple client' do
     before do
-      class ClientSimple
+      @client = Class.new do
         extend Instantiator
         instance(:object) {rand}
       end
     end
     
-    subject {ClientSimple.new}
+    subject {@client.new}
     
     it 'it instantiates object once' do
       subject.object.should be == subject.object
@@ -19,7 +19,7 @@ describe Instantiator  do
 
   context 'with two clients for the same service' do
     before do
-      class ClientDouble
+      @client = Class.new do
         extend Instantiator
         instance(:service) {rand}
         instance(:client1) {[service]}
@@ -27,7 +27,7 @@ describe Instantiator  do
       end
     end
     
-    subject {ClientDouble.new}
+    subject {@client.new}
     
     it 'it instantiates service once' do
       subject.client1[0].should be == subject.client1[0]
@@ -36,14 +36,14 @@ describe Instantiator  do
 
   context 'when there is a circular dependency' do
     before do
-      class ClientLoop
+      @client = Class.new do
         extend Instantiator
         instance(:valueA) {OpenStruct.new(:b => valueB)}
         instance(:valueB) {OpenStruct.new(:a => valueA)}
       end
     end
     
-    subject {ClientLoop.new}
+    subject {@client.new}
     
     it 'the first object has a normal reference to the second' do
       subject.valueA.b.should == subject.valueB
@@ -57,14 +57,14 @@ describe Instantiator  do
 
   context 'where there is an externa' do
     before do
-      class ExternalClient
+      @client = Class.new do
         extend Instantiator
         
-        external(:thing)
+        external_instance(:thing)
       end
     end
 
-    subject {ExternalClient.new}
+    subject {@client.new}
 
     context 'and it is not defined' do
       it 'thing is nil' do
@@ -80,6 +80,31 @@ describe Instantiator  do
         subject.thing.should be == 2
       end
     end
+  end
+
+  context 'an external from one class can be set in another' do
+    before do
+      class ExternalSource
+        extend Instantiator
+        external_instance :value
+        instance(:list) {[:value]}
+      end
+
+      class ExternalClient
+        extend Instantiator
+
+        link ExternalSource do
+          link :my_value, :value
+          link :list
+        end
+
+        instance(:my_value) {4}
+      end
+    end
+    subject {ExternalClient.new}
+    #it 'links things together' do
+    #  subject.list == [4]
+    #end
 
   end
 end

@@ -4,33 +4,24 @@ module Instantiator
 
   def instance(name, &block)
     define_method name do
-      self.instance_variable_set(:@instances, {}) unless self.instance_variable_defined? :@instances
-      self.instance_variable_set(:@partials, {}) unless self.instance_variable_defined? :@partials
-      partials = self.instance_variable_get(:@partials)
-      self.instance_variable_get(:@instances)[name] ||=
+      @instances ||= {}
+      @instances[name] ||= 
         begin
-          if partials[name] 
-            partials[name] 
-          else
-            partials[name] = LazyProxy.new(&block)
-            instance = self.instance_eval(&block)
-            partials[name] = nil
-            instance
-          end
+          @instances[name] = LazyProxy.new(&block)
+          self.instance_eval(&block)
         end
     end
   end
 
-  def external(name)
+  def external_instance(name)
     define_method name do
-      self.instance_variable_set(:@instances, {}) unless self.instance_variable_defined? :@instances
-      return self.instance_variable_get(:@instances)[name]
+      @instances ||= {}
+      @instances[name]
     end
     define_method "#{name}=" do |value|
-      self.instance_variable_set(:@instances, {}) unless self.instance_variable_defined? :@instances
-      self.instance_variable_get(:@instances)[name] = value
+      @instances ||= {}
+      @instances[name] = value
     end
   end
-
 
 end
