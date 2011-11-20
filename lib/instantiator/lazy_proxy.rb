@@ -13,6 +13,7 @@ module Instantiator
           end
         end
       end
+      @init_block = nil
       real_object.send sym, *args, &block
     end
   end

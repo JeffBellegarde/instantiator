@@ -84,27 +84,28 @@ describe Instantiator  do
 
   context 'an external from one class can be set in another' do
     before do
-      class ExternalSource
+      @source = Class.new do
         extend Instantiator
+
         external_instance :value
-        instance(:list) {[:value]}
+        instance(:list) {[value]}
       end
 
-      class ExternalClient
+      @client = Class.new do
         extend Instantiator
-
-        link ExternalSource do
-          link :my_value, :value
-          link :list
+        def initialize(source)
+          source.value = my_value
+          @source = source
         end
 
         instance(:my_value) {4}
+        instance(:wrapper) {{:data => @source.list}}
       end
     end
-    subject {ExternalClient.new}
-    #it 'links things together' do
-    #  subject.list == [4]
-    #end
+    subject {@client.new(@source.new)}
+    it 'links things together' do
+      subject.wrapper.should be == {:data => [4]}
+    end
 
   end
 end
